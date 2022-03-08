@@ -8,6 +8,7 @@ package
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.KeyboardEvent;
+	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
@@ -54,7 +55,7 @@ package
 		}
 		
 		private function selectPictures():void{
-			var extensionName: String = "jpg";
+			var extensionName: String = "png";
 			bs = new FileReferenceList();
 			bs.browse( [new FileFilter( extensionName, "*." + extensionName )] );
 			bs.addEventListener( Event.SELECT, onSelect );
@@ -146,20 +147,12 @@ package
 			var bitmapData: BitmapData = new BitmapData( bitmapWidth, bitmapHeight, true, 0x00000000 );
 			for( var i: int = 0; i < bitmapCount; i++ ){
 				var bitmap: Loader = loadImages[i];
-				bitmap.width = wd;
-				bitmap.height = ht;
-				trace( bitmap.width )
-				trace( bitmap.height )
-				bitmapData.draw( bitmap, null, null, null, new Rectangle( i % rowCount * wd, Math.floor( i / rowCount ) * ht, wd, ht ) );
+				var offsetX: int = i % rowCount * wd;
+				var offsetY: int = Math.floor( i / rowCount ) * ht; 
+				bitmapData.draw( bitmap, new Matrix( 1, 0, 0, 1, offsetX, offsetY ), null, null, new Rectangle( offsetX, offsetY, wd, ht ) );
 			}
 			previewBitmap = new Bitmap(bitmapData);
 			addChildAt( previewBitmap, 0 );
-			
-			trace( bitmapCount )
-			trace( rowCount )
-			trace( colCount )
-			trace( bitmapWidth )
-			trace( bitmapHeight )
 		}
 	}
 }
