@@ -3,11 +3,15 @@ package
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Loader;
+	import flash.display.PNGEncoderOptions;
 	import flash.display.Sprite;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.KeyboardEvent;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -176,8 +180,27 @@ package
 				obj.frames[i] = { x: i % rowCount * wd, y: Math.floor( i / rowCount ) * ht };
 			}
 			var str: String = JSON.stringify( obj );
-			var file: FileReference = new FileReference;
+			var file: File = new File;
 			file.save( str, "name.json" );
+			file.addEventListener( Event.COMPLETE, onSaveComplete );
+		}
+		
+		private function onSaveComplete( e: Event ): void{
+			var path: String = ( e.target as File ).nativePath;
+			path = path.substr( 0, path.lastIndexOf("\\") );
+			var name: String = ( e.target as File ).name;
+			name = name.replace( ".json", "" );
+			var pngEncoderOptions:PNGEncoderOptions = new PNGEncoderOptions();
+			var bitmapData: BitmapData = previewBitmap.bitmapData;
+			var byteArray:ByteArray = bitmapData.encode(bitmapData.rect,pngEncoderOptions);
+
+			var file: File = new File;
+			file.nativePath = path + "\\" + name + ".png";
+
+			var fileStream: FileStream = new FileStream();
+			fileStream.open(file, FileMode.WRITE);
+			fileStream.writeBytes( byteArray );
+			fileStream.close();
 		}
 	}
 }
