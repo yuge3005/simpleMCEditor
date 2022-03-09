@@ -9,6 +9,7 @@ package
 	import flash.events.IOErrorEvent;
 	import flash.events.KeyboardEvent;
 	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
@@ -47,10 +48,10 @@ package
 				selectPictures();
 			}
 			else if( e.keyCode == Keyboard.S && e.controlKey ){
-				
+				saveTexture();
 			}
 			else if( e.keyCode == Keyboard.P && e.controlKey ){
-				preview();
+				preview( true );
 			}
 		}
 		
@@ -119,12 +120,13 @@ package
 			return tx;
 		}
 		
-		private function preview():void{
-			if( !loadImages || loadImages.length == 0 ) return;
+		private function preview( showOnStage: Boolean = false ): Point{
+			if( !loadImages || loadImages.length == 0 ) return null;
 			const wd: int = int( tsW.text );
 			const ht: int = int( tsH.text );
-			if( !wd || ! ht ) return;
+			if( !wd || ! ht ) return null;
 			const bitmapCount: int = loadImages.length;
+
 			if( previewBitmap && contains( previewBitmap ) ){
 				removeChild( previewBitmap );
 			}
@@ -148,11 +150,34 @@ package
 			for( var i: int = 0; i < bitmapCount; i++ ){
 				var bitmap: Loader = loadImages[i];
 				var offsetX: int = i % rowCount * wd;
-				var offsetY: int = Math.floor( i / rowCount ) * ht; 
+				var offsetY: int = Math.floor( i / rowCount ) * ht;
 				bitmapData.draw( bitmap, new Matrix( 1, 0, 0, 1, offsetX, offsetY ), null, null, new Rectangle( offsetX, offsetY, wd, ht ) );
 			}
 			previewBitmap = new Bitmap(bitmapData);
-			addChildAt( previewBitmap, 0 );
+			if( showOnStage )addChildAt( previewBitmap, 0 );
+			
+			return new Point( rowCount, colCount );
+		}
+		
+		private function saveTexture(): void{
+			const duration: int = Number( tsD.text );
+			if( !duration ) return;
+			var pt: Point = preview();
+			if( !pt ) return;
+			var rowCount: int = pt.x;
+			const wd: int = int( tsW.text );
+			const ht: int = int( tsH.text );
+			var obj: Object = {}
+			obj.duration = duration;
+			obj.width = wd;
+			obj.height = ht;
+			obj.frames = [];
+			for( var i: int; i < loadImages.length; i++  ){
+				obj.frames[i] = { x: i % rowCount * wd, y: Math.floor( i / rowCount ) * ht };
+			}
+			var str: String = JSON.stringify( obj );
+			var file: FileReference = new FileReference;
+			file.save( str, "name.json" );
 		}
 	}
 }
